@@ -1,3 +1,7 @@
+let new_client gs client_id =
+  let barracks_entity_id = Entity.create_barracks gs ~pos:{x=4.0; y=3.0} in
+  ignore @@ Lwt_io.printf "created barracks with id %d\n" barracks_entity_id
+
 let create_unit gs client_id msg =
   let open Yojson.Basic.Util in
   let entity_id = msg |> member "entity_id" |> to_int in

@@ -1,9 +1,9 @@
-let react (gs : Gamestate.t)
-          (client : Websocket_lwt.Connected_client.t)
-          (id : int) =
+let react (client : Websocket_lwt.Connected_client.t)
+          (id : int)
+          new_client_handler
+          new_message_handler =
   Lwt_io.printf "new connection from client %d\n" id;
-  let barracks_entity_id = Entity.create_barracks gs ~pos:{x=4.0; y=3.0} in
-  ignore @@ Lwt_io.printf "created barracks with id %d\n" barracks_entity_id;
+  new_client_handler id;
   let open Lwt in
   let rec inner () =
     Websocket_lwt.Connected_client.recv client >>= fun frame ->
@@ -22,7 +22,7 @@ let react (gs : Gamestate.t)
     | Websocket_lwt.Frame.Opcode.Pong ->
       inner ()
     | Websocket_lwt.Frame.Opcode.Text ->
-       ignore @@ Message_handler.handle gs id frame.content;
+       new_message_handler id frame.content;
 
        let msg = `Assoc [("timestamp", `Int 12345678);
                          ("player_id", `Int 0);
@@ -44,15 +44,16 @@ let react (gs : Gamestate.t)
   in inner ()
 
 
-let run (gs : Gamestate.t)
-        (uri : Uri.t) =
+let run (uri : Uri.t)
+        new_client_handler
+        new_message_handler =
   let open Lwt in
   let id = ref (-1) in
   let handle_conn client =
     incr id;
     let id = !id in
     Lwt.catch
-      (fun () -> react gs client id)
+      (fun () -> react client id new_client_handler new_message_handler)
       Lwt.fail
   in
   Resolver_lwt.resolve_uri ~uri Resolver_lwt_unix.system >>= fun endp ->
