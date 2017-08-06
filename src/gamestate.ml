@@ -25,7 +25,7 @@ let create_entity gs ?unit_factory ?point_mass =
   begin
     match unit_factory with 
     | Some x ->
-       ignore @@ Core.Hashtbl.add gs.unit_factories
+       Core.Hashtbl.add_exn gs.unit_factories
                                   ~key:entity_id ~data:x
     | None -> ()
   end;
@@ -33,7 +33,7 @@ let create_entity gs ?unit_factory ?point_mass =
   begin
     match point_mass with
     | Some x ->
-       ignore @@ Core.Hashtbl.add gs.point_masses
+       Core.Hashtbl.add_exn gs.point_masses
                                   ~key:entity_id ~data:x
     | None -> ()
   end;
