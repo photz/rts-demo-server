@@ -1,9 +1,18 @@
+let reply (client : Websocket_lwt.Connected_client.t)
+          (content : string) =
+  let opcode = Websocket_lwt.Frame.Opcode.Text in
+
+  let frame = Websocket_lwt.Frame.create ~opcode ~content () in
+
+  Websocket_lwt.Connected_client.send client frame
+  
+
 let react (client : Websocket_lwt.Connected_client.t)
           (id : int)
           new_client_handler
           new_message_handler =
   Lwt_io.printf "new connection from client %d\n" id;
-  new_client_handler id;
+  new_client_handler id (reply client);
   let open Lwt in
   let rec inner () =
     Websocket_lwt.Connected_client.recv client >>= fun frame ->
@@ -23,20 +32,7 @@ let react (client : Websocket_lwt.Connected_client.t)
       inner ()
     | Websocket_lwt.Frame.Opcode.Text ->
        new_message_handler id frame.content;
-
-       let msg = `Assoc [("timestamp", `Int 12345678);
-                         ("player_id", `Int 0);
-                         ("message", `String "yo whas up??")] in
-
-       let s = `Assoc [("messages", `List [msg])] in
-
-       let json_string = s |> Yojson.to_string in
-
-       let opcode = Websocket_lwt.Frame.Opcode.Text in
-
-       let new_frame = Websocket_lwt.Frame.(create ~opcode ~content:json_string ()) in
-
-       Websocket_lwt.Connected_client.send client new_frame >>= inner
+       inner ()
     | _ ->
        let close_frame = Websocket_lwt.Frame.(close 1002) in
        Websocket_lwt.Connected_client.send client close_frame
