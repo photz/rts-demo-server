@@ -11,10 +11,6 @@ let create () = { point_masses=Core.Int.Table.create ();
                   entity_id=0;
                 }
 
-let new_entity_id (gs : t) =
-  gs.entity_id <- gs.entity_id + 1;
-  gs.entity_id
-
 let unit_factory gs (entity_id : int) =
   Core.Hashtbl.find_exn gs.unit_factories entity_id
 
@@ -22,7 +18,9 @@ let unit_factories gs = gs.unit_factories
 
 (** creates a new entity with the given components and returns its id *)
 let create_entity gs ?unit_factory ?point_mass =
-  let entity_id = new_entity_id gs in
+  gs.entity_id <- gs.entity_id + 1;
+
+  let entity_id = gs.entity_id in
 
   begin
     match unit_factory with 
