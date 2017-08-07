@@ -30,4 +30,7 @@ module Unit_factory = struct
 
   let peek (unit_factory : t) =
     Core.Queue.peek unit_factory.queue
+
+  let remove_first (unit_factory : t) =
+    Core.Queue.dequeue unit_factory.queue
 end
