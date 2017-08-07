@@ -48,13 +48,15 @@ let get_handler msg =
   | `String "chat_message" -> chat_message
   | _ -> unknown_message
 
-let handle gs clients client_id raw_msg =
-  try
-    let open Lwt in
-    let open Yojson.Basic.Util in
-    let content = Yojson.Basic.from_string raw_msg in
+(** Handles messages put into its message box by other threads *)
+let rec loop gs message_box clients =
+  let open Lwt in 
+  let open Yojson.Basic.Util in
+  Lwt_mvar.take message_box >>= fun msg ->
+  begin
+    Lwt_io.printf "hello %s\n" msg;
+    let content = Yojson.Basic.from_string msg in
     let handler = get_handler content in
-    handler gs clients client_id content;
-  with
-    xcp -> Lwt_io.printf "got an invalid message from %d\n" client_id
-  
+    handler gs (Core.Int.Table.create ()) 123 content;
+    loop gs message_box clients
+  end           

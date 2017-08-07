@@ -5,10 +5,10 @@ let () =
 
   let clients = Core.Int.Table.create () in
 
+  let message_box : string Lwt_mvar.t = Lwt_mvar.create_empty () in
+
   Lwt_main.run @@ Lwt.join [Game_loop.run gs clients;
-                            Game_server.run
-                              uri
-                              (Message_handler.new_client gs clients)
-                              (Message_handler.handle gs clients)]
+                            Game_server.run uri message_box clients;
+                            Message_handler.loop gs message_box clients]
 
 

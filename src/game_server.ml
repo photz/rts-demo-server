@@ -9,10 +9,10 @@ let reply (client : Websocket_lwt.Connected_client.t)
 
 let react (client : Websocket_lwt.Connected_client.t)
           (id : int)
-          new_client_handler
-          new_message_handler =
+          message_box
+          clients =
   Lwt_io.printf "new connection from client %d\n" id;
-  new_client_handler id (reply client);
+  Core.Hashtbl.add_exn clients id client;
   let open Lwt in
   let rec inner () =
     Websocket_lwt.Connected_client.recv client >>= fun frame ->
@@ -23,6 +23,7 @@ let react (client : Websocket_lwt.Connected_client.t)
       inner
     | Websocket_lwt.Frame.Opcode.Close ->
       (* Immediately echo and pass this last message to the user *)
+       Core.Hashtbl.remove clients id;
       if String.length frame.content >= 2 then
         let content = String.sub frame.content 0 2 in
         Websocket_lwt.Connected_client.send client Websocket_lwt.Frame.(create ~opcode:Websocket_lwt.Frame.Opcode.Close ~content ())
@@ -31,7 +32,7 @@ let react (client : Websocket_lwt.Connected_client.t)
     | Websocket_lwt.Frame.Opcode.Pong ->
       inner ()
     | Websocket_lwt.Frame.Opcode.Text ->
-       new_message_handler id frame.content;
+       Lwt_mvar.put message_box frame.content;
        inner ()
     | _ ->
        let close_frame = Websocket_lwt.Frame.(close 1002) in
@@ -40,16 +41,14 @@ let react (client : Websocket_lwt.Connected_client.t)
   in inner ()
 
 
-let run (uri : Uri.t)
-        new_client_handler
-        new_message_handler =
+let run (uri : Uri.t) message_box clients =
   let open Lwt in
   let id = ref (-1) in
   let handle_conn client =
     incr id;
     let id = !id in
     Lwt.catch
-      (fun () -> react client id new_client_handler new_message_handler)
+      (fun () -> react client id message_box clients)
       Lwt.fail
   in
   Resolver_lwt.resolve_uri ~uri Resolver_lwt_unix.system >>= fun endp ->
