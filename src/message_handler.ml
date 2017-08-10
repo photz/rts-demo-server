@@ -10,21 +10,20 @@ let create_unit gs clients client_id msg =
   let entity_id = msg |> member "entity_id" |> to_int in
   let unit_factory = Gamestate.unit_factory gs entity_id in
   Component.Unit_factory.produce unit_factory;
-  Lwt_io.printf "create_unit"
+  ()
 
 let unit_attack gs clients client_id msg =
-  Lwt_io.printf "unit_attack"
+  ()
 
 let unit_go_to gs clients client_id msg =
-  Lwt_io.printf "unit_go_to"
+  ()
 
 let unknown_message gs clients client_id msg =
-  Lwt_io.printf "unknown message"
+  ()
 
 let chat_message gs clients client_id msg =
   let open Yojson.Basic.Util in
   let message = msg |> member "message" |> to_string in
-  Lwt_io.printf "chat message: %s\n" message;
   let msg = `Assoc [("timestamp", `Int 12345678);
                     ("player_id", `Int 0);
                     ("message", `String "yo whas up??")] in
@@ -45,18 +44,15 @@ let get_handler msg =
   | `String "create_unit" -> create_unit
   | `String "unit_go_to" -> unit_go_to
   | `String "unit_attack" -> unit_attack
-  | `String "chat_message" -> chat_message
   | _ -> unknown_message
 
 (** Handles messages put into its message box by other threads *)
-let rec loop gs message_box clients =
-  let open Lwt in 
-  let open Yojson.Basic.Util in
-  Lwt_mvar.take message_box >>= fun msg ->
-  begin
-    Lwt_io.printf "hello %s\n" msg;
+let handle gs msg =
+  try
     let content = Yojson.Basic.from_string msg in
     let handler = get_handler content in
     handler gs (Core.Int.Table.create ()) 123 content;
-    loop gs message_box clients
-  end           
+    Lwt_io.printf "received a message: %s\n" msg
+  with
+    xcn -> Lwt_io.printf "unable to handle message"
+
