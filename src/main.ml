@@ -2,7 +2,7 @@ let ns_to_s ns =
   let ns_per_s = 1_000_000_000. in
   (Core.Float.of_int ns) /. ns_per_s
 
-let rec run tick_ns gs message_box last_update_ns =
+let rec run tick_ns gs message_box last_update_ns clients =
   let open Lwt in
   
   let now = Util.get_timestamp () in
@@ -20,23 +20,24 @@ let rec run tick_ns gs message_box last_update_ns =
   Lwt.pick [tick; handle_msg] >>= function
   | None ->
      let gs = System.run gs (ns_to_s tick_ns) in
-     run tick_ns gs message_box (Util.get_timestamp ())
+     run tick_ns gs message_box (Util.get_timestamp ()) clients
   | Some message ->
      begin
        match message with
-       | Game_server.Message.Join client_id ->
+       | Game_server.Message.Join (client_id, send) ->
+          send "welcome!";
           let gs = Message_handler.new_client gs client_id in
           Lwt_io.printf "new client %d\n" client_id;
-          run tick_ns gs message_box last_update_ns
+          run tick_ns gs message_box last_update_ns clients
          
        | Game_server.Message.Quit client_id -> 
           Lwt_io.printf "client %d is leaving us :-(\n" client_id;
-          run tick_ns gs message_box last_update_ns
+          run tick_ns gs message_box last_update_ns clients
 
        | Game_server.Message.Message (id, text) ->
           Lwt_io.printf "text: %s\n" text;
           let gs = Message_handler.handle gs text in
-          run tick_ns gs message_box last_update_ns
+          run tick_ns gs message_box last_update_ns clients
 
      end
 
@@ -51,6 +52,6 @@ let () =
 
   let tick_ns = 1_000_000_000 in
 
-  Lwt_main.run @@ Lwt.join [run tick_ns gs message_box 0;
-                            Game_server.run uri message_box clients]
+  Lwt_main.run @@ Lwt.join [run tick_ns gs message_box 0 clients;
+                            Game_server.run uri message_box]
   
