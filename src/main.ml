@@ -20,17 +20,20 @@ let rec run tick_ns gs message_box last_update_ns clients =
   Lwt.pick [tick; handle_msg] >>= function
   | None ->
      let gs = System.run gs (ns_to_s tick_ns) in
+     Lwt_io.printf "currently %d clients\n"
+                   (Core.Hashtbl.length clients);
      run tick_ns gs message_box (Util.get_timestamp ()) clients
   | Some message ->
      begin
        match message with
        | Game_server.Message.Join (client_id, send) ->
-          send "welcome!";
+          Core.Hashtbl.add_exn clients client_id send;
           let gs = Message_handler.new_client gs client_id in
           Lwt_io.printf "new client %d\n" client_id;
           run tick_ns gs message_box last_update_ns clients
          
        | Game_server.Message.Quit client_id -> 
+          Core.Hashtbl.remove clients client_id;
           Lwt_io.printf "client %d is leaving us :-(\n" client_id;
           run tick_ns gs message_box last_update_ns clients
 

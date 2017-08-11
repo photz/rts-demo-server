@@ -32,6 +32,7 @@ let react (client : Websocket_lwt.Connected_client.t)
       inner
     | Websocket_lwt.Frame.Opcode.Close ->
       (* Immediately echo and pass this last message to the user *)
+       Lwt_mvar.put message_box (Quit id);
       if String.length frame.content >= 2 then
         let content = String.sub frame.content 0 2 in
         Websocket_lwt.Connected_client.send client Websocket_lwt.Frame.(create ~opcode:Websocket_lwt.Frame.Opcode.Close ~content ())
@@ -43,6 +44,7 @@ let react (client : Websocket_lwt.Connected_client.t)
        Lwt_mvar.put message_box (Message (id, frame.content));
        inner ()
     | _ ->
+       Lwt_mvar.put message_box (Quit id);
        let close_frame = Websocket_lwt.Frame.(close 1002) in
        Websocket_lwt.Connected_client.send client close_frame
 
@@ -57,7 +59,9 @@ let run (uri : Uri.t) message_box =
     let id = !id in
     Lwt.catch
       (fun () -> react client id message_box)
-      (fun _ -> Lwt_io.printf "error\n")
+      (fun _ ->
+        Lwt_mvar.put message_box (Quit id);
+        Lwt_io.printf "error\n")
   in
   Resolver_lwt.resolve_uri ~uri Resolver_lwt_unix.system >>= fun endp ->
   let open Conduit_lwt_unix in
