@@ -19,12 +19,26 @@ let rec run tick_ns gs message_box last_update_ns =
 
   Lwt.pick [tick; handle_msg] >>= function
   | None ->
-     System.run gs (ns_to_s tick_ns);
+     let gs = System.run gs (ns_to_s tick_ns) in
      run tick_ns gs message_box (Util.get_timestamp ())
   | Some message ->
-     Message_handler.handle gs message;
-     run tick_ns gs message_box last_update_ns
+     begin
+       match message with
+       | Game_server.Message.Join client_id ->
+          let gs = Message_handler.new_client gs client_id in
+          Lwt_io.printf "new client %d\n" client_id;
+          run tick_ns gs message_box last_update_ns
+         
+       | Game_server.Message.Quit client_id -> 
+          Lwt_io.printf "client %d is leaving us :-(\n" client_id;
+          run tick_ns gs message_box last_update_ns
 
+       | Game_server.Message.Message (id, text) ->
+          Lwt_io.printf "text: %s\n" text;
+          let gs = Message_handler.handle gs text in
+          run tick_ns gs message_box last_update_ns
+
+     end
 
 let () =
   let gs = Gamestate.create () in
@@ -33,7 +47,7 @@ let () =
 
   let clients = Core.Int.Table.create () in
 
-  let message_box : string Lwt_mvar.t = Lwt_mvar.create_empty () in
+  let message_box : Game_server.Message.t Lwt_mvar.t = Lwt_mvar.create_empty () in
 
   let tick_ns = 1_000_000_000 in
 

@@ -1,25 +1,27 @@
-let new_client gs clients client_id send_message =
+let new_client gs client_id =
   let barracks_entity_id = Entity.create_barracks gs ~pos:{x=4.0; y=3.0} in
   ignore @@ Lwt_io.printf "created barracks with id %d\n" barracks_entity_id;
-  ignore @@ Core.Hashtbl.add_exn clients
-                                 ~key:client_id
-                                 ~data:send_message
+  (* ignore @@ Core.Hashtbl.add_exn clients *)
+  (*                                ~key:client_id *)
+  (*                                ~data:send_message; *)
 
-let create_unit gs clients client_id msg =
+  gs
+
+let create_unit gs clients client_id msg : Gamestate.t =
   let open Yojson.Basic.Util in
   let entity_id = msg |> member "entity_id" |> to_int in
   let unit_factory = Gamestate.unit_factory gs entity_id in
-  Component.Unit_factory.produce unit_factory;
-  ()
+  ignore @@ Component.Unit_factory.produce unit_factory;
+  gs
 
-let unit_attack gs clients client_id msg =
-  ()
+let unit_attack gs clients client_id msg = gs
 
-let unit_go_to gs clients client_id msg =
-  ()
 
-let unknown_message gs clients client_id msg =
-  ()
+let unit_go_to gs clients client_id msg = gs
+
+
+let unknown_message gs clients client_id msg = gs
+
 
 let chat_message gs clients client_id msg =
   let open Yojson.Basic.Util in
@@ -34,7 +36,9 @@ let chat_message gs clients client_id msg =
 
   let send_message = Core.Hashtbl.find_exn clients client_id in
 
-  send_message json_string
+  ignore @@ send_message json_string;
+
+  gs
 
 
 let get_handler msg =
@@ -51,8 +55,7 @@ let handle gs msg =
   try
     let content = Yojson.Basic.from_string msg in
     let handler = get_handler content in
-    handler gs (Core.Int.Table.create ()) 123 content;
-    Lwt_io.printf "received a message: %s\n" msg
+    handler gs (Core.Int.Table.create ()) 123 content
   with
-    xcn -> Lwt_io.printf "unable to handle message"
+    xcn -> gs
 

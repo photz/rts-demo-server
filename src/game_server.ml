@@ -1,3 +1,9 @@
+module Message = struct
+  type t = Join of int
+         | Message of (int * string)
+         | Quit of int
+end
+
 let reply (client : Websocket_lwt.Connected_client.t)
           (content : string) =
   let opcode = Websocket_lwt.Frame.Opcode.Text in
@@ -12,7 +18,9 @@ let react (client : Websocket_lwt.Connected_client.t)
           message_box
           clients =
   Lwt_io.printf "new connection from client %d\n" id;
-  Core.Hashtbl.add_exn clients id client;
+  let open Message in
+  let join_msg = Join id in
+  Lwt_mvar.put message_box join_msg;
   let open Lwt in
   let rec inner () =
     Websocket_lwt.Connected_client.recv client >>= fun frame ->
@@ -32,7 +40,7 @@ let react (client : Websocket_lwt.Connected_client.t)
     | Websocket_lwt.Frame.Opcode.Pong ->
       inner ()
     | Websocket_lwt.Frame.Opcode.Text ->
-       Lwt_mvar.put message_box frame.content;
+       Lwt_mvar.put message_box (Message (id, frame.content));
        inner ()
     | _ ->
        let close_frame = Websocket_lwt.Frame.(close 1002) in
