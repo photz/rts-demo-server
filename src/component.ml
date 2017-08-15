@@ -6,7 +6,30 @@ module Point_mass = struct
            }
 
   let create pos =
-    { position=pos; velocity={x=0.; y=0.}}
+    { position=pos; velocity={x=0.; y=0.} }
+
+  let update_pos pm time_passed =
+    let x = pm.position.x +. pm.velocity.x *. time_passed in
+    let y = pm.position.y +. pm.velocity.y *. time_passed in
+    { position={x;y}; velocity=pm.velocity}
+
+  let update_velocity pm velocity =
+    { position = pm.position; velocity }
+
+  let halt pm =
+    { position = pm.position; velocity = {x = 0.; y = 0. } }
+
+  let serialize pm =
+    let open Yojson.Basic in
+    let position = `Assoc [("x", `Float pm.position.x);
+                           ("y", `Float pm.position.y)]
+    in
+    let velocity = `Assoc [("x", `Float pm.velocity.x);
+                           ("y", `Float pm.velocity.y)]
+    in
+
+    `Assoc [("position", position);
+            ("velocity", velocity)]
 end
 
 module Command = struct
@@ -14,6 +37,26 @@ module Command = struct
     | Idle
     | GoTo of vec2
     | Attack of int
+
+  let create () = Idle
+
+  let serialize (command : t) =
+    let open Yojson.Basic in
+    match command with
+    | Idle -> `String "idle"
+    | GoTo _ -> `String "walking"
+    | Attack _ -> `String "attacking"
+end
+
+(** Component encapsulating an entity's health or repair state *)
+module Health = struct
+  type t = { hp: float }
+end
+
+(** A component encapsulating an entity's ability to 
+    inflict damage on other entities *)
+module CanAttack = struct
+  type t = { damage: float }
 end
 
 module Unit_factory = struct
@@ -33,4 +76,7 @@ module Unit_factory = struct
 
   let remove_first (unit_factory : t) =
     Core.Queue.dequeue unit_factory.queue
+
+  let serialize (unit_factory : t) =
+    `Assoc [("in_queue", `Int (Core.Queue.length unit_factory.queue))]
 end
