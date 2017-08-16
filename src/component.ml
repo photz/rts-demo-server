@@ -30,7 +30,13 @@ module Point_mass = struct
 
     `Assoc [("position", position);
             ("velocity", velocity)]
+
+  let distance (pm1 : t) (pm2 : t) : float =
+    let x_d = pm1.position.x -. pm2.position.x in
+    let y_d = pm1.position.y -. pm2.position.y in
+    Core.Float.sqrt @@ (x_d *. x_d) +. (y_d *. y_d)
 end
+
 
 module Command = struct
   type t =
@@ -50,13 +56,33 @@ end
 
 (** Component encapsulating an entity's health or repair state *)
 module Health = struct
-  type t = { hp: float }
+  type t = { hp: float;
+             max_hp: float }
+
+  let create ~max_hp =
+    { hp = max_hp; max_hp }
+
+  let serialize (health : t) =
+    let open Yojson.Basic in
+    `Assoc [("hp", `Float health.hp);
+            ("max_hp", `Float health.max_hp)]
 end
 
 (** A component encapsulating an entity's ability to 
     inflict damage on other entities *)
-module CanAttack = struct
-  type t = { damage: float }
+module Armed = struct
+  type t = { damage: float;
+             min_dist: float;
+             reload: int;
+             last_shot: int }
+
+  let create ~damage ~min_dist ~reload =
+    { damage; min_dist; reload; last_shot = 0 }
+
+  let serialize (c : t) =
+    let open Yojson.Basic in
+    `Assoc [("damage", `Float c.damage);
+            ("min_dist", `Float c.min_dist)]
 end
 
 module Unit_factory = struct

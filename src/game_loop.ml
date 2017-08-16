@@ -29,10 +29,21 @@ let update_players gs clients =
                                    `Int (owner_id))
   in
 
+  let health = yojson_hashtbl gs.health Component.Health.serialize
+  in
+
+  let armed = yojson_hashtbl gs.armed Component.Armed.serialize
+  in
+
+  let players = yojson_hashtbl gs.players Player.serialize in
+
   let gs_yojson = `Assoc [("point_masses", point_masses);
                           ("commands", commands);
                           ("unit_factories", unit_factories);
-                          ("ownership", ownership)]
+                          ("ownership", ownership);
+                          ("health", health);
+                          ("armed", armed);
+                          ("players", players)]
   in
 
   let f ~key ~data = data (Yojson.to_string gs_yojson) in
@@ -83,7 +94,7 @@ let rec run_internal tick_ns gs message_box last_update_ns clients =
 
        | Game_server.Message.Message (id, text) ->
           Lwt_io.printf "text: %s\n" text;
-          let gs = Message_handler.handle gs text id in
+          let gs = Message_handler.handle gs text clients id in
           run_internal tick_ns gs message_box last_update_ns clients
 
      end

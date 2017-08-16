@@ -7,6 +7,6 @@ let () =
 
   let tick_ns = 200_000_000 in
 
-  Lwt_main.run @@ Lwt.join [Game_loop.run tick_ns gs message_box;
+  Lwt_main.run @@ Lwt.pick [Game_loop.run tick_ns gs message_box;
                             Game_server.run uri message_box]
   

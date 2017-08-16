@@ -7,18 +7,31 @@ let new_client gs client_id send =
   let open Component in
   let barracks_entity_id = Entity.create_barracks gs ~pos:{x; y} ~player:client_id in
   ignore @@ Lwt_io.printf "created barracks with id %d\n" barracks_entity_id;
-  (* ignore @@ Core.Hashtbl.add_exn clients *)
-  (*                                ~key:client_id *)
-  (*                                ~data:send_message; *)
-
+  let open Gamestate in
+  let new_player = Player.create "unknown" 3000 in
+  Core.Hashtbl.add_exn gs.players client_id new_player;
 
   gs
 
 let create_unit gs clients client_id msg : Gamestate.t =
   let open Yojson.Basic.Util in
   let entity_id = msg |> member "entity_id" |> to_int in
-  let unit_factory = Gamestate.unit_factory gs entity_id in
-  ignore @@ Component.Unit_factory.produce unit_factory;
+  let player = Gamestate.player gs client_id in
+  let open Player in
+  let unit_price = 10 in
+  let sufficient_funds = unit_price <= player.funds in
+  begin
+    match sufficient_funds with 
+    | true ->
+       let open Gamestate in
+       let unit_factory = Gamestate.unit_factory gs entity_id in
+       ignore @@ Component.Unit_factory.produce unit_factory;
+       let p = Gamestate.player gs client_id in
+       Core.Hashtbl.change gs.players client_id ~f:(fun _ ->
+                             Some {name=p.name;funds=p.funds-unit_price})
+    | false ->
+       ignore @@ Lwt_io.printf "player %d has insufficient funds to produce a unit\n"
+  end;
   gs
 
 let unit_attack gs clients client_id msg =
@@ -99,11 +112,11 @@ let get_handler msg =
   | _ -> unknown_message
 
 (** Handles messages put into its message box by other threads *)
-let handle gs msg client_id =
+let handle gs msg clients client_id =
   try
     let content = Yojson.Basic.from_string msg in
     let handler = get_handler content in
-    handler gs (Core.Int.Table.create ()) client_id content
+    handler gs clients client_id content
   with
     xcn -> begin
       Lwt_io.printf ("exception in handler: ");

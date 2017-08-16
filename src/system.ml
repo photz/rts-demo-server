@@ -17,7 +17,7 @@ let unit_production gs time_passed : Gamestate.t =
          let pm = Core.Hashtbl.find_exn gs.point_masses key in
          let open Component in
          let ownership = Core.Hashtbl.find_exn gs.ownership key in
-         let unit_pos = {x=pm.position.x -. 0.5; y=pm.position.x} in
+         let unit_pos = {x=pm.position.x -. 0.5; y=pm.position.y} in
          Entity.create_unit gs ~pos:unit_pos ~player:ownership;
          ignore @@ Lwt_io.printf "new unit\n"
        ) else (
@@ -100,7 +100,45 @@ let commands gs time_passed =
     | Some(Attack target) ->
        ignore @@ Lwt_io.printf "entity %d is attacking %d\n"
                                entity_id
-                               target
+                               target;
+
+       let entity_point_mass = Gamestate.point_mass gs entity_id in
+       let target_point_mass = Gamestate.point_mass gs target in
+
+       let distance = Component.Point_mass.distance entity_point_mass
+                                                    target_point_mass
+       in
+
+       let armed = Gamestate.armed gs entity_id in
+
+       let open Component.Armed in
+       let open Component.Health in
+
+       let within_distance = distance < armed.min_dist in
+
+       match within_distance with
+       | true ->
+          let {hp; max_hp} = Core.Hashtbl.find_exn gs.health target in
+
+          let hp = hp -. armed.damage in
+
+          ignore @@ Lwt_io.printf "health of %d down to %f\n"
+                                  target hp;
+
+          if hp <= 0.0 then (
+            Gamestate.remove_entity gs target;
+            Core.Hashtbl.change gs.commands entity_id (fun _ ->
+                                  Some Idle)
+          ) else (
+            Core.Hashtbl.change gs.health target (fun _ ->
+                                  Some {hp; max_hp})
+          );
+
+          ignore @@ Lwt_io.printf "unit %d can attack %d\n"
+                                  entity_id target
+       | false ->
+          ignore @@ Lwt_io.printf "unit %d is too far away from %d to attack\n"
+                                  entity_id target
 
     | _ -> ()
   in
@@ -110,6 +148,7 @@ let commands gs time_passed =
   Core.List.iter entity_ids ~f:update_entity;
 
   gs
+
 
 (** Apply all systems and return the resulting game state *)
 let run gs time_passed : Gamestate.t =
