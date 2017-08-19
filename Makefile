@@ -1,4 +1,9 @@
-.PHONY: watch compile run compile-run clean
+dirs=src test
+
+.PHONY: watch compile run compile-run clean test watch-test
+
+watch-test:
+	find $(dirs) | grep -v '#' | entr -r make test
 
 watch:
 	find websocket.2.9/ src/*.ml Makefile | grep -v '#' | entr -r make compile-run
@@ -26,3 +31,7 @@ run:
 clean:
 	rm -f *~ src/*~
 	ocamlbuild -clean
+
+test:
+	corebuild -I src -r test/quadtree_test.native
+	./quadtree_test.native
