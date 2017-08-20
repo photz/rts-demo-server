@@ -212,7 +212,7 @@ let resource_production gs (time_passed : float) =
                            ~f:(function
                           | Some player ->
                              let funds = player.funds +. per_player in
-                             Some player
+                             Some {name=player.name; funds }
                           | None ->
                              Lwt_io.printf "missing player\n";
                              None
