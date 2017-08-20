@@ -8,7 +8,7 @@ let new_client gs client_id send =
   let barracks_entity_id = Entity.create_barracks gs ~pos:{x; y} ~player:client_id in
   ignore @@ Lwt_io.printf "created barracks with id %d\n" barracks_entity_id;
   let open Gamestate in
-  let new_player = Player.create "unknown" 3000 in
+  let new_player = Player.create "unknown" 3000. in
   Entity.create_gold_mine gs ~pos:{x=x+.0.7;y=y+.0.3};
   Core.Hashtbl.add_exn gs.players client_id new_player;
 
@@ -19,7 +19,7 @@ let create_unit gs clients client_id msg : Gamestate.t =
   let entity_id = msg |> member "entity_id" |> to_int in
   let player = Gamestate.player gs client_id in
   let open Player in
-  let unit_price = 10 in
+  let unit_price = 10. in
   let sufficient_funds = unit_price <= player.funds in
   begin
     match sufficient_funds with 
@@ -29,7 +29,7 @@ let create_unit gs clients client_id msg : Gamestate.t =
        ignore @@ Component.Unit_factory.produce unit_factory;
        let p = Gamestate.player gs client_id in
        Core.Hashtbl.change gs.players client_id ~f:(fun _ ->
-                             Some {name=p.name;funds=p.funds-unit_price})
+                             Some {name=p.name;funds=p.funds-.unit_price})
     | false ->
        ignore @@ Lwt_io.printf "player %d has insufficient funds to produce a unit\n"
   end;
