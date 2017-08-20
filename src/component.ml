@@ -108,10 +108,10 @@ module Unit_factory = struct
 end
 
 module Resource = struct
-  type t = { amount: int }
+  type t = { amount: float }
 
   let create amount = { amount }
 
   let serialize (resource : t) =
-    `Assoc [("amount", `Int resource.amount)]
+    `Assoc [("amount", `Float resource.amount)]
 end

@@ -27,7 +27,7 @@ let create_unit (gs : Gamestate.t) ~pos ~player =
 
 let create_gold_mine gs ~pos =
   let point_mass = Component.Point_mass.create pos in
-  let resource = Component.Resource.create 2000 in
+  let resource = Component.Resource.create 2000. in
   Gamestate.create_entity ~point_mass
                           ~resource
                           gs
