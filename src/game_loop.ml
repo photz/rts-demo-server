@@ -56,10 +56,6 @@ let update_players gs clients =
   Core.Hashtbl.iteri clients ~f
 
 
-let ns_to_s ns =
-  let ns_per_s = 1_000_000_000. in
-  (Core.Float.of_int ns) /. ns_per_s
-
 let rec run_internal tick_ns gs message_box last_update_ns clients =
 
   let open Lwt in
@@ -68,7 +64,7 @@ let rec run_internal tick_ns gs message_box last_update_ns clients =
   let time_passed_ns = now - last_update_ns in
   let time_left_ns = tick_ns - time_passed_ns in
 
-  let tick = Lwt_unix.sleep (ns_to_s time_left_ns) >>= fun () ->
+  let tick = Lwt_unix.sleep (Util.ns_to_s time_left_ns) >>= fun () ->
              Lwt.return None
   in
 
@@ -78,7 +74,7 @@ let rec run_internal tick_ns gs message_box last_update_ns clients =
 
   Lwt.pick [tick; handle_msg] >>= function
   | None ->
-     let gs = System.run gs (ns_to_s tick_ns) in
+     let gs = System.run gs (Util.ns_to_s tick_ns) in
      Lwt_io.printf "currently %d clients\n"
                    (Core.Hashtbl.length clients);
      update_players gs clients;
@@ -101,7 +97,6 @@ let rec run_internal tick_ns gs message_box last_update_ns clients =
           Lwt_io.printf "text: %s\n" text;
           let gs = Message_handler.handle gs text clients id in
           run_internal tick_ns gs message_box last_update_ns clients
-
      end
 
 let run tick_ns gs message_box =
