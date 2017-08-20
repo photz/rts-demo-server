@@ -2,11 +2,12 @@ dirs=src test
 
 .PHONY: watch compile run compile-run clean test watch-test
 
-watch-test:
-	find $(dirs) | grep -v '#' | entr -r make test
 
 watch:
 	find websocket.2.9/ src/*.ml Makefile | grep -v '#' | entr -r make compile-run
+
+watch-test:
+	find $(dirs) | grep -v '#' | entr -r make test
 
 
 compile-run: compile run
