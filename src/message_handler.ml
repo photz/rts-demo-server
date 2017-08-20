@@ -118,7 +118,9 @@ let handle gs msg clients client_id =
     let handler = get_handler content in
     handler gs clients client_id content
   with
-    xcn -> begin
-      Lwt_io.printf ("exception in handler: ");
-      gs
-    end
+  | Yojson.Json_error x ->
+     Lwt_io.printf "error while parsing json from client: %s\n" x;
+     gs
+  | _ ->
+     Lwt_io.printf "exception while handling message from client\n";
+     gs
