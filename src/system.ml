@@ -185,7 +185,7 @@ let resource_production gs (time_passed : float) =
 
       let number_of_bases = Core.List.length nearby_bases in
       
-      let amount_per_s_per_player = 10. in
+      let amount_per_s_per_player = 0.1 in
 
       let total_amount = amount_per_s_per_player *. (Core.Float.of_int number_of_bases) in
 
