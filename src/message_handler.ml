@@ -9,6 +9,7 @@ let new_client gs client_id send =
   ignore @@ Lwt_io.printf "created barracks with id %d\n" barracks_entity_id;
   let open Gamestate in
   let new_player = Player.create "unknown" 3000 in
+  Entity.create_gold_mine gs ~pos:{x=x+.0.7;y=y+.0.3};
   Core.Hashtbl.add_exn gs.players client_id new_player;
 
   gs

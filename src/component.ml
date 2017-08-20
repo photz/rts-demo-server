@@ -106,3 +106,12 @@ module Unit_factory = struct
   let serialize (unit_factory : t) =
     `Assoc [("in_queue", `Int (Core.Queue.length unit_factory.queue))]
 end
+
+module Resource = struct
+  type t = { amount: int }
+
+  let create amount = { amount }
+
+  let serialize (resource : t) =
+    `Assoc [("amount", `Int resource.amount)]
+end

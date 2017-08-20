@@ -5,6 +5,7 @@ type t = {
     ownership: (int, int) Core.Hashtbl.t;
     health: (int, Component.Health.t) Core.Hashtbl.t;
     armed: (int, Component.Armed.t) Core.Hashtbl.t;
+    resources: (int, Component.Resource.t) Core.Hashtbl.t;
     mutable entity_id: int;
     players: (int, Player.t) Core.Hashtbl.t;
   }
@@ -15,6 +16,7 @@ let create () = { point_masses=Core.Int.Table.create ();
                   ownership=Core.Int.Table.create ();
                   health=Core.Int.Table.create ();
                   armed=Core.Int.Table.create ();
+                  resources=Core.Int.Table.create ();
                   entity_id=0;
                   players=Core.Int.Table.create ();
                 }
@@ -45,7 +47,7 @@ let remove_entity gs entity_id =
   Core.Hashtbl.remove gs.ownership entity_id
 
 (** creates a new entity with the given components and returns its id *)
-let create_entity ?armed ?unit_factory ?point_mass ?command ?ownership ?health gs =
+let create_entity ?armed ?unit_factory ?point_mass ?command ?ownership ?health ?resource gs =
   gs.entity_id <- gs.entity_id + 1;
 
   let entity_id = gs.entity_id in
@@ -93,6 +95,14 @@ let create_entity ?armed ?unit_factory ?point_mass ?command ?ownership ?health g
     | Some health -> Core.Hashtbl.add_exn gs.health
                                           ~key:entity_id
                                           ~data:health
+    | None -> ()
+  end;
+
+  begin
+    match resource with
+    | Some resource -> Core.Hashtbl.add_exn gs.resources
+                                            ~key:entity_id
+                                            ~data:resource
     | None -> ()
   end;
 

@@ -35,6 +35,10 @@ let update_players gs clients =
   let armed = yojson_hashtbl gs.armed Component.Armed.serialize
   in
 
+  let resources = yojson_hashtbl gs.resources
+                                 Component.Resource.serialize
+  in
+
   let players = yojson_hashtbl gs.players Player.serialize in
 
   let gs_yojson = `Assoc [("point_masses", point_masses);
@@ -43,7 +47,8 @@ let update_players gs clients =
                           ("ownership", ownership);
                           ("health", health);
                           ("armed", armed);
-                          ("players", players)]
+                          ("players", players);
+                          ("resources", resources)]
   in
 
   let f ~key ~data = data (Yojson.to_string gs_yojson) in
