@@ -181,4 +181,19 @@ let rec within tree position max_distance =
        let results = results @ (within left_up position max_distance) in
        results
      ) else []
-     
+
+(** Remove an entity from the tree by id *)
+let rec remove ~id = function
+  | Leaf { center; size; entities } ->
+     let entities = Core.List.filter entities ~f:(fun (other_id, pos) ->
+                                       id != other_id)
+     in
+     Leaf { center; size; entities }
+  | Node { center; size; left_up; right_up; left_down; right_down } ->
+     let left_up = remove ~id left_up in
+     let left_down = remove ~id left_down in
+     let right_up = remove ~id right_up in
+     let right_down = remove ~id right_down in
+     Node { center; size; left_up; right_up; left_down; right_down }
+    
+  
