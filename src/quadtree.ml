@@ -1,16 +1,16 @@
+open Vec
+
 (* ^+y 
    |
    |
    +------> +x *)
 
-type pos = {x : float; y : float }
-
 (** A Quadtree *)
 type t =
-  | Leaf of { center : pos;
+  | Leaf of { center : vec2;
               size : float;
-              entities : (int * pos) list }
-  | Node of { center : pos;
+              entities : (int * vec2) list }
+  | Node of { center : vec2;
               size : float;
               left_up : t;
               left_down : t;

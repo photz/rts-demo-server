@@ -1,4 +1,4 @@
-type vec2 = { x: float; y: float }
+open Vec
 
 module Point_mass = struct
   type t = { position: vec2;
