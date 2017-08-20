@@ -43,7 +43,6 @@ let movement gs time_passed =
                             entity_id
                             new_point_mass.position.x
                             new_point_mass.position.y
-
   in
   let entity_ids = Core.Hashtbl.keys gs.point_masses in
 
@@ -116,30 +115,32 @@ let commands gs time_passed =
 
        let within_distance = distance < armed.min_dist in
 
-       match within_distance with
-       | true ->
-          let {hp; max_hp} = Core.Hashtbl.find_exn gs.health target in
+       begin
+         match within_distance with
 
-          let hp = hp -. armed.damage in
+         | true ->
+            let {hp; max_hp} = Core.Hashtbl.find_exn gs.health target in
 
-          ignore @@ Lwt_io.printf "health of %d down to %f\n"
-                                  target hp;
+            let hp = hp -. armed.damage in
 
-          if hp <= 0.0 then (
-            Gamestate.remove_entity gs target;
-            Core.Hashtbl.change gs.commands entity_id (fun _ ->
-                                  Some Idle)
-          ) else (
-            Core.Hashtbl.change gs.health target (fun _ ->
-                                  Some {hp; max_hp})
-          );
+            ignore @@ Lwt_io.printf "health of %d down to %f\n"
+                                    target hp;
 
-          ignore @@ Lwt_io.printf "unit %d can attack %d\n"
-                                  entity_id target
-       | false ->
-          ignore @@ Lwt_io.printf "unit %d is too far away from %d to attack\n"
-                                  entity_id target
+            if hp <= 0.0 then (
+              Gamestate.remove_entity gs target;
+              Core.Hashtbl.change gs.commands entity_id (fun _ ->
+                                    Some Idle)
+            ) else (
+              Core.Hashtbl.change gs.health target (fun _ ->
+                                    Some {hp; max_hp})
+            );
 
+            ignore @@ Lwt_io.printf "unit %d can attack %d\n"
+                                    entity_id target
+         | false ->
+            ignore @@ Lwt_io.printf "unit %d is too far away from %d to attack\n"
+                                    entity_id target
+       end
     | _ -> ()
   in
 
