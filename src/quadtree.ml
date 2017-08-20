@@ -156,7 +156,7 @@ let circle_square_intersect sqr_center sqr_size circle_center circle_rad =
 let rec within tree position max_distance =
   match tree with
   | Leaf { center; size; entities } ->
-     let intersect = circle_square_intersect center size
+     let intersect = circle_square_intersect center (size *. 2.)
                                              position max_distance
      in
 
@@ -166,14 +166,14 @@ let rec within tree position max_distance =
      ) else []
 
   | Node { size; center; left_up; left_down; right_up; right_down } ->
-     let intersect = circle_square_intersect center size
+     let intersect = circle_square_intersect center (size *. 2.)
                                              position max_distance
      in
      if intersect then (
        let results = within left_up position max_distance in
-       let results = results @ (within right_up position max_distance) in
        let results = results @ (within left_down position max_distance) in
-       let results = results @ (within left_up position max_distance) in
+       let results = results @ (within right_up position max_distance) in
+       let results = results @ (within right_down position max_distance) in
        results
      ) else []
 
