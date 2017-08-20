@@ -24,6 +24,8 @@ compile:
 	-package core \
 	-tag thread \
 	-r \
+	-I src/systems \
+	-I src \
 	src/main.native
 
 run:
