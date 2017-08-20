@@ -89,17 +89,15 @@ let unknown_message gs clients client_id msg = gs
 let chat_message gs clients client_id msg =
   let open Yojson.Basic.Util in
   let message = msg |> member "message" |> to_string in
-  let msg = `Assoc [("timestamp", `Int 12345678);
-                    ("player_id", `Int 0);
-                    ("message", `String "yo whas up??")] in
+  let msg = `Assoc [("player_id", `Int client_id);
+                    ("message", `String message)] in
 
-  let s = `Assoc [("messages", `List [msg])] in
+  let msg = `Assoc [("messages", `List [msg])] in
 
-  let json_string = s |> Yojson.to_string in
+  let json_string = msg |> Yojson.to_string in
 
-  let send_message = Core.Hashtbl.find_exn clients client_id in
-
-  ignore @@ send_message json_string;
+  Core.Hashtbl.iter_vals clients ~f:(fun send ->
+                           send json_string);
 
   gs
 
@@ -110,6 +108,7 @@ let get_handler msg =
   | `String "create_unit" -> create_unit
   | `String "unit_go_to" -> unit_go_to
   | `String "unit_attack" -> unit_attack
+  | `String "chat_msg" -> chat_message
   | _ -> unknown_message
 
 (** Handles messages put into its message box by other threads *)
