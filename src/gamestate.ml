@@ -38,6 +38,9 @@ let point_mass gs entity_id =
 let armed gs entity_id =
   Core.Hashtbl.find_exn gs.armed entity_id
 
+let ownership gs entity_id =
+  Core.Hashtbl.find_exn gs.ownership entity_id
+
 let remove_entity gs entity_id =
   Core.Hashtbl.remove gs.point_masses entity_id;
   Core.Hashtbl.remove gs.unit_factories entity_id;
