@@ -29,24 +29,19 @@ let rec print ?lvl:(lvl=0) =
   function
   | Leaf { entities } ->
      let open Core.Printf in
-     Core.List.iter entities ~f:(fun (id, pos) ->
-                      printf "%s%d - %.1f,%.1f\n" prefix id pos.x pos.y)
+     Core.List.fold entities ~init:"" ~f:(fun acc (id, pos) ->
+                      acc ^ (sprintf "%s%d - %.1f,%.1f\n" prefix id pos.x pos.y))
   | Node { left_up; left_down; right_up; right_down } ->
      let lvl = lvl + 1 in
-     print_endline @@ prefix ^ "left up:";
-     print ~lvl left_up;
-     print_endline @@ prefix ^ "left down:";
-     print ~lvl left_down;
-     print_endline @@ prefix ^ "right up:";
-     print ~lvl right_up;
-     print_endline @@ prefix ^ "right down:";
-     print ~lvl right_down
+     let r = prefix ^ "left up\n" in
+     let r = r ^ (print ~lvl left_up) in
+     let r = r ^ prefix ^ "left down\n" in
+     let r = r ^ (print ~lvl left_down) in
+     let r = r ^ prefix ^ "right up:\n" in
+     let r = r ^ (print ~lvl right_up) in
+     let r = r ^ prefix ^ "right down:\n"; in
+     r ^ (print ~lvl right_down)
 
-(** Determines the distance between two points in 2d *)                   
-let distance a b =
-  let x_d = a.x -. b.x in
-  let y_d = a.y -. b.y in
-  Core.Float.sqrt(x_d *. x_d +. y_d *. y_d)
 
 
 (** Creates a new Quadtree *)
