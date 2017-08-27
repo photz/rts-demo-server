@@ -59,27 +59,27 @@ let unit_attack gs clients client_id msg =
   gs
 
 
-let unit_go_to gs clients client_id msg =
+let unit_go_to gs clients client_id msg : Gamestate.t =
   let open Yojson.Basic.Util in
   let entity_id = msg |> member "entity_id" |> to_int in
   let dest_x = msg |> member "dest" |> member "x" |> to_float in
   let dest_y = msg |> member "dest" |> member "y" |> to_float in
 
+  let open Gamestate in
+  let open Component in
   let open Component.Command in
 
-  let open Component in
-
-  let open Gamestate in
-
-  Lwt_io.printf "let %d go to %f,%f\n" entity_id dest_x dest_y;
+  let owner_id = Core.Hashtbl.find_exn gs.ownership entity_id in
 
   let f = function
     | None -> None
-    | Some (_) -> Some (GoTo {x=dest_x; y=dest_y})
+    | Some current_command ->
+       if owner_id == client_id
+       then Some (GoTo {x=dest_x; y=dest_y})
+       else Some current_command
   in
 
   Core.Hashtbl.change gs.commands entity_id ~f;
-
 
   gs
 
