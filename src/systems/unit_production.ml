@@ -8,7 +8,6 @@ let run gs time_passed : Gamestate.t =
     | None -> ()
     | Some first ->
        let now = Util.get_timestamp () in
-       let duration = 5_000_000_000 in
        if first + duration < now then (
          Component.Unit_factory.remove_first data;
          let open Gamestate in
