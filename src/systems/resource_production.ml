@@ -12,8 +12,6 @@ let run gs (time_passed : float) =
 
   let tree = Core.Hashtbl.fold unit_factories ~init:tree ~f in
 
-  Lwt_io.printf "%s\n" (Quadtree.print tree);
-
   let open Gamestate in
 
   let gold_mine_ids = Core.Hashtbl.keys gs.resources in
