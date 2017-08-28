@@ -121,6 +121,9 @@ let handle gs msg clients client_id =
   | Yojson.Json_error x ->
      Lwt_io.printf "error while parsing json from client: %s\n" x;
      gs
+  | Failure msg ->
+     Lwt_io.printf "error: %s" msg;
+     gs
   | _ ->
      Lwt_io.printf "exception while handling message from client\n";
      gs
