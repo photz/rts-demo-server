@@ -87,7 +87,25 @@ let attack entity_id target gs time_passed =
                                entity_id target
     | false ->
        ignore @@ Lwt_io.printf "unit %d is too far away from %d to attack\n"
-                               entity_id target
+                               entity_id target;
+       let xd = target_point_mass.position.x -. entity_point_mass.position.x
+       in
+       let yd = target_point_mass.position.y -. entity_point_mass.position.y
+       in
+
+       let len = Core.sqrt ((xd *. xd) +. (yd *. yd)) in
+
+       let xd = xd /. len in
+       let yd = yd /. len in
+
+       let entity_point_mass =
+         Component.Point_mass.update_velocity entity_point_mass
+                                              {x = xd; y = yd}
+       in
+
+       Core.Hashtbl.change gs.point_masses entity_id ~f:(fun _ ->
+                             Some entity_point_mass)
+       
   end
 
 (** System responsible for turning commands into actions *)
