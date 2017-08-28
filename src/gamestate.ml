@@ -47,7 +47,8 @@ let remove_entity gs entity_id =
   Core.Hashtbl.remove gs.health entity_id;
   Core.Hashtbl.remove gs.armed entity_id;
   Core.Hashtbl.remove gs.commands entity_id;
-  Core.Hashtbl.remove gs.ownership entity_id
+  Core.Hashtbl.remove gs.ownership entity_id;
+  Core.Hashtbl.remove gs.resources entity_id
 
 (** creates a new entity with the given components and returns its id *)
 let create_entity ?armed ?unit_factory ?point_mass ?command ?ownership ?health ?resource gs =
