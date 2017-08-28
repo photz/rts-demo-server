@@ -67,24 +67,41 @@ let attack entity_id target gs time_passed =
     match within_distance with
 
     | true ->
-       let {hp; max_hp} = Core.Hashtbl.find_exn gs.health target in
+       let now = Util.get_timestamp () in
 
-       let hp = hp -. armed.damage in
+       if armed.last_shot + armed.reload < now then (
+         let {hp; max_hp} = Core.Hashtbl.find_exn gs.health target in
 
-       ignore @@ Lwt_io.printf "health of %d down to %f\n"
-                               target hp;
+         let hp = hp -. armed.damage in
 
-       if hp <= 0.0 then (
-         Gamestate.remove_entity gs target;
-         Core.Hashtbl.change gs.commands entity_id (fun _ ->
-                               Some Idle)
+         ignore @@ Lwt_io.printf "health of %d down to %f\n"
+                                 target hp;
+
+         if hp <= 0.0 then (
+           Gamestate.remove_entity gs target;
+           Core.Hashtbl.change gs.commands entity_id (fun _ ->
+                                 Some Idle)
+         ) else (
+           Core.Hashtbl.change gs.health target (fun _ ->
+                                 Some {hp; max_hp})
+         );
+
+         Core.Hashtbl.change gs.armed entity_id (fun _ ->
+                               Some {damage = armed.damage;
+                                     min_dist = armed.min_dist;
+                                     reload = armed.reload;
+                                     last_shot = now});
+
+         ignore @@ Lwt_io.printf "unit %d can attack %d\n"
+                                 entity_id target
        ) else (
-         Core.Hashtbl.change gs.health target (fun _ ->
-                               Some {hp; max_hp})
-       );
 
-       ignore @@ Lwt_io.printf "unit %d can attack %d\n"
-                               entity_id target
+         ignore @@ Lwt_io.printf "entity %d needs to wait before it can shoot again";
+
+         
+       
+       )
+
     | false ->
        ignore @@ Lwt_io.printf "unit %d is too far away from %d to attack\n"
                                entity_id target;
