@@ -9,7 +9,7 @@ let new_client gs client_id send =
   let open Gamestate in
   let new_player = Player.create "unknown" 3000. in
   Core.Hashtbl.add_exn gs.players client_id new_player;
-  Entity.create_gold_mine gs ~pos:{x=x+.0.7;y=y+.0.3};
+  Entity.create_gold_mine gs ~pos:{x=x+.2.5;y};
   gs
 
 
