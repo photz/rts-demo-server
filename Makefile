@@ -22,6 +22,7 @@ compile:
 	-package websocket.lwt \
 	-package yojson \
 	-package core \
+	-package sqlite3 \
 	-tag thread \
 	-r \
 	-I src/systems \
