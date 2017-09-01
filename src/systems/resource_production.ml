@@ -1,6 +1,6 @@
 
 
-let run gs (time_passed : float) =
+let run entity_templates gs (time_passed : float) =
   let tree = Quadtree.create {x=0.; y=0.} 32.0 in
   
   let unit_factories = Gamestate.unit_factories gs in

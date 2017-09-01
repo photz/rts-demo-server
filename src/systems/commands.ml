@@ -126,7 +126,7 @@ let attack entity_id target gs time_passed =
   end
 
 (** System responsible for turning commands into actions *)
-let run gs time_passed =
+let run entity_templates gs time_passed =
 
   let open Gamestate in
   let open Component.Command in

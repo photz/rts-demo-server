@@ -56,7 +56,7 @@ let update_players gs clients =
   Core.Hashtbl.iteri clients ~f
 
 
-let rec run_internal tick_ns gs message_box last_update_ns clients =
+let rec run_internal tick_ns entity_templates  gs message_box last_update_ns clients =
 
   let open Lwt in
   
@@ -74,11 +74,11 @@ let rec run_internal tick_ns gs message_box last_update_ns clients =
 
   Lwt.pick [tick; handle_msg] >>= function
   | None ->
-     let gs = System.run gs (Util.ns_to_s tick_ns) in
+     let gs = System.run entity_templates gs (Util.ns_to_s tick_ns) in
      Lwt_io.printf "currently %d clients\n"
                    (Core.Hashtbl.length clients);
      update_players gs clients;
-     run_internal tick_ns gs message_box (Util.get_timestamp ()) clients
+     run_internal tick_ns entity_templates gs message_box (Util.get_timestamp ()) clients
   | Some message ->
      begin
        match message with
@@ -86,20 +86,20 @@ let rec run_internal tick_ns gs message_box last_update_ns clients =
           Core.Hashtbl.add_exn clients client_id send;
           let gs = Message_handler.new_client gs client_id send in
           Lwt_io.printf "new client %d\n" client_id;
-          run_internal tick_ns gs message_box last_update_ns clients
+          run_internal tick_ns entity_templates gs message_box last_update_ns clients
          
        | Game_server.Message.Quit client_id -> 
           Core.Hashtbl.remove clients client_id;
           Lwt_io.printf "client %d is leaving us :-(\n" client_id;
-          run_internal tick_ns gs message_box last_update_ns clients
+          run_internal tick_ns entity_templates gs message_box last_update_ns clients
 
        | Game_server.Message.Message (id, text) ->
           Lwt_io.printf "text: %s\n" text;
-          let gs = Message_handler.handle gs text clients id in
-          run_internal tick_ns gs message_box last_update_ns clients
+          let gs = Message_handler.handle entity_templates gs text clients id in
+          run_internal tick_ns entity_templates gs message_box last_update_ns clients
      end
 
-let run tick_ns gs message_box =
+let run tick_ns entity_templates gs message_box =
   let clients = Core.Int.Table.create () in
 
-  run_internal tick_ns gs message_box 0 clients
+  run_internal tick_ns entity_templates gs message_box 0 clients

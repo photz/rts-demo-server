@@ -23,7 +23,7 @@ let create () = { point_masses=Core.Int.Table.create ();
 
 let player gs id = Core.Hashtbl.find_exn gs.players id
 
-let unit_factory gs (entity_id : int) =
+let unit_factory gs (entity_id : int) : Component.Unit_factory.t =
   Core.Hashtbl.find_exn gs.unit_factories entity_id
 
 let unit_factories gs = gs.unit_factories

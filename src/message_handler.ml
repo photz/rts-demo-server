@@ -6,36 +6,51 @@ let new_client gs client_id send =
   let y = 20.0 -. (Core.Random.float 40.0)in
   let open Component in
   let barracks_entity_id = Entity.create_barracks gs ~pos:{x; y} ~player:client_id in
-  ignore @@ Lwt_io.printf "created barracks with id %d\n" barracks_entity_id;
   let open Gamestate in
   let new_player = Player.create "unknown" 3000. in
-  Entity.create_gold_mine gs ~pos:{x=x+.0.7;y=y+.0.3};
   Core.Hashtbl.add_exn gs.players client_id new_player;
-
+  Entity.create_gold_mine gs ~pos:{x=x+.0.7;y=y+.0.3};
   gs
 
-let create_unit gs clients client_id msg : Gamestate.t =
+
+let create_unit entity_templates gs clients client_id msg : Gamestate.t =
   let open Yojson.Basic.Util in
+  let open Player in
+  let open Component.Unit_factory in
   let entity_id = msg |> member "entity_id" |> to_int in
   let player = Gamestate.player gs client_id in
-  let open Player in
-  let unit_price = 10. in
-  let sufficient_funds = unit_price <= player.funds in
+  let template_id = msg |> member "template_id" |> to_int in
+  let template = Core.Map.find entity_templates template_id in
+  let factory = Gamestate.unit_factory gs entity_id in
+  let unit_price = Core.List.Assoc.find_exn ~equal:(=)
+                                            factory.producibles
+                                            template_id
+  in
+
+  let sufficient_funds = Core.Float.of_int unit_price <= player.funds in
   begin
     match sufficient_funds with 
     | true ->
        let open Gamestate in
-       let unit_factory = Gamestate.unit_factory gs entity_id in
-       ignore @@ Component.Unit_factory.produce unit_factory;
        let p = Gamestate.player gs client_id in
        Core.Hashtbl.change gs.players client_id ~f:(fun _ ->
-                             Some {name=p.name;funds=p.funds-.unit_price})
+                             Some {name=p.name;
+                                   funds=p.funds-.(Core.Float.of_int unit_price)});
+
+       let factory = Component.Unit_factory.produce
+                       factory
+                       template_id
+       in
+
+       Core.Hashtbl.change gs.unit_factories entity_id ~f:(fun _ ->
+                             Some factory)
+
     | false ->
        ignore @@ Lwt_io.printf "player %d has insufficient funds to produce a unit\n"
   end;
   gs
 
-let unit_attack gs clients client_id msg =
+let unit_attack entity_templates gs clients client_id msg =
   let open Gamestate in
   let open Yojson.Basic.Util in
   let entity_id = msg |> member "entity_id" |> to_int in
@@ -59,7 +74,7 @@ let unit_attack gs clients client_id msg =
   gs
 
 
-let unit_go_to gs clients client_id msg : Gamestate.t =
+let unit_go_to entity_templates gs clients client_id msg : Gamestate.t =
   let open Yojson.Basic.Util in
   let entity_id = msg |> member "entity_id" |> to_int in
   let dest_x = msg |> member "dest" |> member "x" |> to_float in
@@ -83,10 +98,10 @@ let unit_go_to gs clients client_id msg : Gamestate.t =
 
   gs
 
-let unknown_message gs clients client_id msg = gs
+let unknown_message _ gs clients client_id msg = gs
                                              
 
-let chat_message gs clients client_id msg =
+let chat_message _ gs clients client_id msg =
   let open Yojson.Basic.Util in
   let message = msg |> member "message" |> to_string in
   let msg = `Assoc [("player_id", `Int client_id);
@@ -112,11 +127,11 @@ let get_handler msg =
   | _ -> unknown_message
 
 (** Handles messages put into its message box by other threads *)
-let handle gs msg clients client_id =
+let handle entity_templates gs msg clients client_id =
   try
     let content = Yojson.Basic.from_string msg in
     let handler = get_handler content in
-    handler gs clients client_id content
+    handler entity_templates gs clients client_id content
   with
   | Yojson.Json_error x ->
      Lwt_io.printf "error while parsing json from client: %s\n" x;

@@ -1,6 +1,6 @@
 
 
-let run gs time_passed =
+let run entity_templates gs time_passed =
   let point_masses = Gamestate.point_masses gs in
 
   let open Gamestate in

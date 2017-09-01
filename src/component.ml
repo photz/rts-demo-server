@@ -37,7 +37,6 @@ module Point_mass = struct
     Core.Float.sqrt @@ (x_d *. x_d) +. (y_d *. y_d)
 end
 
-
 module Command = struct
   type t =
     | Idle
@@ -86,25 +85,48 @@ module Armed = struct
 end
 
 module Unit_factory = struct
-  type t = { queue: int Core.Queue.t }
+  type t = { producibles: (int * int) list;
+             queue: int list;
+             began: int }
 
-  let create () = { queue = Core.Queue.create () }
+  let create producibles =
+    { queue = [];
+      producibles;
+      began = 0 }
 
-  let produce (unit_factory : t) =
-    let now : int = Util.get_timestamp () in
-    Core.Queue.enqueue unit_factory.queue now
+  let produce (factory : t) id : t =
+    if Core.List.length factory.queue == 0 then (
+      { queue = [id];
+        producibles = factory.producibles;
+        began = Util.get_timestamp () }
+    ) else (
+      { queue = factory.queue @ [id];
+        producibles = factory.producibles;
+        began = factory.began }
+    )
+
+  let peek (factory : t) =
+    match factory.queue with
+    | first :: _ -> Some first
+    | _ -> None
+
+  let remove_first = function
+    | { queue = first :: rest; producibles; began } ->
+       { queue = rest; producibles; began }
+    | x -> x
 
   let units_in_queue (unit_factory : t) =
-    Core.Queue.length unit_factory.queue
-
-  let peek (unit_factory : t) =
-    Core.Queue.peek unit_factory.queue
-
-  let remove_first (unit_factory : t) =
-    Core.Queue.dequeue unit_factory.queue
+    Core.List.length unit_factory.queue
 
   let serialize (unit_factory : t) =
-    `Assoc [("in_queue", `Int (Core.Queue.length unit_factory.queue))]
+    let serialize_producible (id, cost) = `List [`Int id; `Int cost] in
+
+    let producibles = Core.List.map unit_factory.producibles
+                                    ~f:serialize_producible
+    in
+
+    `Assoc [("producibles", `List producibles);
+            ("in_queue", `Int (Core.List.length unit_factory.queue))]
 end
 
 module Resource = struct
