@@ -6,6 +6,18 @@ module Template = struct
              unit_factory: Component.Unit_factory.t option;
              resource: Component.Resource.t option }
 
+  let create_command_table db =
+    let sql = "CREATE TABLE command(
+               entity_template_id UNSIGNED INTEGER,
+               FOREIGN KEY(entity_template_id)
+               REFERENCES entity_template(id),
+               PRIMARY KEY(entity_template_id)
+               )"
+    in
+    match Sqlite3.exec db sql with
+    | Sqlite3.Rc.OK -> ()
+    | _ -> print_endline "unable to create command table"
+
   let create_entity_template_table db =
     try
       let sql = "CREATE TABLE entity_template(
@@ -121,6 +133,23 @@ module Template = struct
     | Sqlite3.Rc.OK -> !health
     | _ -> raise (Failure "unable to get health component")
 
+
+  let get_command db id : Component.Command.t option =
+    let command = ref None in
+
+    let cb _ = command := Some (Component.Command.create ()) in
+
+    let sql =
+      "SELECT 0
+       FROM command
+       WHERE entity_template_id = " ^ (Core.Int.to_string id)
+    in
+
+    match Sqlite3.exec_no_headers db sql ~cb with
+    | Sqlite3.Rc.OK -> !command
+    | _ -> raise (Failure "unable to create command table")
+
+
   let get_factory db id : Component.Unit_factory.t option =
     let producibles = ref [] in
 
@@ -150,6 +179,7 @@ module Template = struct
 
   let create_tables db =
     Sqlite3.exec db "PRAGMA foreign_keys = ON";
+    create_command_table db;
     create_entity_template_table db;
     create_health_table db;
     create_armed_table db;
@@ -160,15 +190,15 @@ module Template = struct
     { point_mass = None;
       health = get_health db id;
       armed = get_armed db id;
-      command = None;
+      command = get_command db id;
       unit_factory = get_factory db id;
       resource = None }
 
-  let spawn ?point_mass ?command ?ownership gs (template : t) =
+  let spawn ?point_mass ?ownership gs (template : t) =
     let entity_id = Gamestate.create_entity ?armed:template.armed
                             ?health:template.health
                             ?unit_factory:template.unit_factory
-                            ?command
+                            ?command:template.command
                             ?ownership
                             ?point_mass
                             gs

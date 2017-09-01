@@ -26,13 +26,10 @@ let run entity_templates gs time_passed : Gamestate.t =
 
          let tpl = Core.Map.find_exn entity_templates template_id in
 
-         let command = Component.Command.create () in
-
          ignore @@ Lwt_io.printf "new unit\n";
 
          Entity.Template.spawn ~point_mass:pm
                                ~ownership
-                               ~command
                                gs
                                tpl
        ) else (
