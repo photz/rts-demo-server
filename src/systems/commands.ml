@@ -86,6 +86,15 @@ let attack entity_id target gs time_passed =
                                  Some {hp; max_hp})
          );
 
+         let halt_entity = function
+           | Some point_mass ->
+              Some (Component.Point_mass.halt point_mass)
+           | None ->
+              None
+         in
+
+         Core.Hashtbl.change gs.point_masses entity_id ~f:halt_entity;
+
          Core.Hashtbl.change gs.armed entity_id (fun _ ->
                                Some {damage = armed.damage;
                                      min_dist = armed.min_dist;
@@ -95,11 +104,7 @@ let attack entity_id target gs time_passed =
          ignore @@ Lwt_io.printf "unit %d can attack %d\n"
                                  entity_id target
        ) else (
-
          ignore @@ Lwt_io.printf "entity %d needs to wait before it can shoot again";
-
-         
-       
        )
 
     | false ->
