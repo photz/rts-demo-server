@@ -1,25 +1,28 @@
+let port = 9004
+let host = "127.0.0.1"
+let tick_ns = 200_000_000
+let db_path = "entity_templates.sqlite3"
 
 let () =
-  let entity_templates =
-    let db = Sqlite3.db_open "entity_templates.sqlite3" in
-    Entity.Template.all db
-  in
-  let gs = Gamestate.create () in
+  (* message box that the server puts messages into to let the main
+     loop know about incoming messages and new clients *)
+  let message_box = Lwt_mvar.create_empty () in
 
-  let port = 9004 in
-  let host = "127.0.0.1" in
+  let game_loop =
+    let db = Sqlite3.db_open db_path in
+    Entity.Template.create_tables db;
+    let templates = Entity.Template.all db in
+    let gs = Gamestate.create () in
 
-  let uri = Uri.make ~scheme:"http" ~host ~port () in
-
-  let message_box : Game_server.Message.t Lwt_mvar.t = Lwt_mvar.create_empty () in
-
-  let tick_ns = 200_000_000 in
-
-  let loop = Game_loop.run tick_ns entity_templates gs message_box
+    Game_loop.run tick_ns templates gs message_box
   in
 
-  let server = Game_server.run uri message_box in
+  let server =
+    let uri = Uri.make ~scheme:"http" ~host ~port () in
 
-  Lwt_main.run @@ Lwt.pick [loop; server]
+    Game_server.run uri message_box
+  in
+
+  Lwt_main.run @@ Lwt.pick [game_loop; server]
 
   
