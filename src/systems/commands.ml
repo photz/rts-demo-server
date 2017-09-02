@@ -50,23 +50,27 @@ let attack entity_id target gs time_passed =
                           target;
 
   let entity_point_mass = Gamestate.point_mass gs entity_id in
-  let target_point_mass = Gamestate.point_mass gs target in
 
-  let distance = Component.Point_mass.distance entity_point_mass
-                                               target_point_mass
-  in
+  match Core.Hashtbl.find gs.point_masses target with
+  | None ->
 
-  let armed = Gamestate.armed gs entity_id in
+     Core.Hashtbl.change gs.commands entity_id ~f:(fun _ ->
+                           Some (Component.Command.create ()))
+  | Some target_point_mass ->
 
-  let open Component.Armed in
-  let open Component.Health in
 
-  let within_distance = distance < armed.min_dist in
+     let distance = Component.Point_mass.distance entity_point_mass
+                                                  target_point_mass
+     in
 
-  begin
-    match within_distance with
+     let armed = Gamestate.armed gs entity_id in
 
-    | true ->
+     let open Component.Armed in
+     let open Component.Health in
+
+     let within_distance = distance < armed.min_dist in
+
+     if within_distance then (
        let now = Util.get_timestamp () in
 
        if armed.last_shot + armed.reload < now then (
@@ -106,8 +110,7 @@ let attack entity_id target gs time_passed =
        ) else (
          ignore @@ Lwt_io.printf "entity %d needs to wait before it can shoot again";
        )
-
-    | false ->
+     ) else (
        ignore @@ Lwt_io.printf "unit %d is too far away from %d to attack\n"
                                entity_id target;
        let xd = target_point_mass.position.x -. entity_point_mass.position.x
@@ -127,8 +130,8 @@ let attack entity_id target gs time_passed =
 
        Core.Hashtbl.change gs.point_masses entity_id ~f:(fun _ ->
                              Some entity_point_mass)
-       
-  end
+     )     
+
 
 (** System responsible for turning commands into actions *)
 let run entity_templates gs time_passed =
