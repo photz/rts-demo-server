@@ -12,6 +12,21 @@ let new_client gs client_id send =
   Entity.create_gold_mine gs ~pos:{x=x+.2.5;y};
   gs
 
+(** Handler that gets called when a player leaves the game *)
+let leave gs client_id : Gamestate.t =
+  (* get a list of entities belonging to the player who just left *)
+  let entity_ids = ref [] in
+
+  let f ~key ~data =
+    if data == client_id
+    then entity_ids := key :: !entity_ids
+  in
+
+  let open Gamestate in
+  Core.Hashtbl.iteri gs.ownership ~f;
+
+  Core.List.fold !entity_ids ~init:gs ~f:Gamestate.remove_entity
+
 
 let create_unit entity_templates gs clients client_id msg : Gamestate.t =
   let open Yojson.Basic.Util in

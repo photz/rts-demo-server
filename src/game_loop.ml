@@ -90,7 +90,7 @@ let rec run_internal tick_ns entity_templates  gs message_box last_update_ns cli
          
        | Game_server.Message.Quit client_id -> 
           Core.Hashtbl.remove clients client_id;
-          Lwt_io.printf "client %d is leaving us :-(\n" client_id;
+          let gs = Message_handler.leave gs client_id in
           run_internal tick_ns entity_templates gs message_box last_update_ns clients
 
        | Game_server.Message.Message (id, text) ->

@@ -41,14 +41,15 @@ let armed gs entity_id =
 let ownership gs entity_id =
   Core.Hashtbl.find_exn gs.ownership entity_id
 
-let remove_entity gs entity_id =
+let remove_entity gs entity_id : t =
   Core.Hashtbl.remove gs.point_masses entity_id;
   Core.Hashtbl.remove gs.unit_factories entity_id;
   Core.Hashtbl.remove gs.health entity_id;
   Core.Hashtbl.remove gs.armed entity_id;
   Core.Hashtbl.remove gs.commands entity_id;
   Core.Hashtbl.remove gs.ownership entity_id;
-  Core.Hashtbl.remove gs.resources entity_id
+  Core.Hashtbl.remove gs.resources entity_id;
+  gs
 
 (** creates a new entity with the given components and returns its id *)
 let create_entity ?armed ?unit_factory ?point_mass ?command ?ownership ?health ?resource gs =
