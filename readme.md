@@ -1,7 +1,7 @@
 # rts-demo-server
 
 Server for a simple real-time strategy game played in the browser.
-The client can be found here [here](https://github.com/photz/rts-demo-client).
+The client can be found [here](https://github.com/photz/rts-demo-client).
 
 ## Setup
 
