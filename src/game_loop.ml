@@ -56,7 +56,7 @@ let update_players gs clients =
   Core.Hashtbl.iteri clients ~f
 
 
-let rec run_internal tick_ns entity_templates  gs message_box last_update_ns clients =
+let rec run_internal tick_ns entity_templates gs message_box last_update_ns clients =
 
   let open Lwt in
   
@@ -75,8 +75,6 @@ let rec run_internal tick_ns entity_templates  gs message_box last_update_ns cli
   Lwt.pick [tick; handle_msg] >>= function
   | None ->
      let gs = System.run entity_templates gs (Util.ns_to_s tick_ns) in
-     Lwt_io.printf "currently %d clients\n"
-                   (Core.Hashtbl.length clients);
      update_players gs clients;
      run_internal tick_ns entity_templates gs message_box (Util.get_timestamp ()) clients
   | Some message ->
@@ -85,7 +83,6 @@ let rec run_internal tick_ns entity_templates  gs message_box last_update_ns cli
        | Game_server.Message.Join (client_id, send) ->
           Core.Hashtbl.add_exn clients client_id send;
           let gs = Message_handler.new_client gs client_id send in
-          Lwt_io.printf "new client %d\n" client_id;
           run_internal tick_ns entity_templates gs message_box last_update_ns clients
          
        | Game_server.Message.Quit client_id -> 
@@ -94,7 +91,6 @@ let rec run_internal tick_ns entity_templates  gs message_box last_update_ns cli
           run_internal tick_ns entity_templates gs message_box last_update_ns clients
 
        | Game_server.Message.Message (id, text) ->
-          Lwt_io.printf "text: %s\n" text;
           let gs = Message_handler.handle entity_templates gs text clients id in
           run_internal tick_ns entity_templates gs message_box last_update_ns clients
      end
