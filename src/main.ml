@@ -5,8 +5,11 @@ let () =
     Entity.Template.all db
   in
   let gs = Gamestate.create () in
-  let port = Core.Int.to_string 9004 in
-  let uri = Uri.of_string @@ "http://127.0.0.1:" ^ port in
+
+  let port = 9004 in
+  let host = "127.0.0.1" in
+
+  let uri = Uri.make ~scheme:"http" ~host ~port () in
 
   let message_box : Game_server.Message.t Lwt_mvar.t = Lwt_mvar.create_empty () in
 
