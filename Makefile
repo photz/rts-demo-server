@@ -20,6 +20,7 @@ compile:
 	-package conduit \
 	-package lwt \
 	-package websocket \
+	-package websocket.lwt \
 	-package yojson \
 	-package core \
 	-package sqlite3 \
