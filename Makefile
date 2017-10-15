@@ -19,7 +19,7 @@ compile:
 	-package lwt.ppx \
 	-package conduit \
 	-package lwt \
-	-package websocket-lwt \
+	-package websocket \
 	-package yojson \
 	-package core \
 	-package sqlite3 \
