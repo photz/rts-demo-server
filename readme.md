@@ -18,4 +18,5 @@ opam install ocamlbuild
 opam install ocamlfind
 opam install websocket-lwt
 opam install sqlite3
+opam install core
 ```
