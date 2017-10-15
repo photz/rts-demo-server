@@ -12,3 +12,10 @@ After having installed OPAM, switch to a less recent compiler version as some li
 ```sh
 opam switch 4.04.2
 ```
+
+```sh
+opam install ocamlbuild
+opam install ocamlfind
+opam install websocket-lwt
+opam install sqlite3
+```
