@@ -19,4 +19,5 @@ opam install ocamlfind
 opam install websocket-lwt
 opam install sqlite3
 opam install core
+opam install yojson
 ```
