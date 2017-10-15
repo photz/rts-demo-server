@@ -2,8 +2,8 @@ let new_client gs client_id send =
   let open Yojson.Basic in
   let msg = `Assoc [("player_id", `Int client_id)] in
   send @@ Yojson.to_string msg;
-  let x = 20.0 -.(Core.Random.float 40.0) in
-  let y = 20.0 -. (Core.Random.float 40.0)in
+  let x = Core.Random.float 30.0 in
+  let y = Core.Random.float 30.0 in
   let open Component in
   let barracks_entity_id = Entity.create_barracks gs ~pos:{x; y} ~player:client_id in
   let open Gamestate in
