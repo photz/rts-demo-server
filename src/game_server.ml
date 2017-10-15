@@ -6,9 +6,9 @@ end
 
 let reply (client : Websocket_lwt.Connected_client.t)
           (content : string) : unit =
-  let opcode = Websocket_lwt.Frame.Opcode.Text in
+  let opcode = Websocket.Frame.Opcode.Text in
 
-  let frame = Websocket_lwt.Frame.create ~opcode ~content () in
+  let frame = Websocket.Frame.create ~opcode ~content () in
 
   Websocket_lwt.Connected_client.send client frame;
 
@@ -26,26 +26,26 @@ let react (client : Websocket_lwt.Connected_client.t)
   let rec inner () =
     Websocket_lwt.Connected_client.recv client >>= fun frame ->
     match frame.opcode with
-    | Websocket_lwt.Frame.Opcode.Ping ->
+    | Websocket.Frame.Opcode.Ping ->
        Websocket_lwt.Connected_client.send client
-                                           Websocket_lwt.Frame.(create ~opcode:Opcode.Pong ~content:frame.content ()) >>=
+                                           Websocket.Frame.(create ~opcode:Opcode.Pong ~content:frame.content ()) >>=
       inner
-    | Websocket_lwt.Frame.Opcode.Close ->
+    | Websocket.Frame.Opcode.Close ->
       (* Immediately echo and pass this last message to the user *)
        Lwt_mvar.put message_box (Quit id);
       if String.length frame.content >= 2 then
         let content = String.sub frame.content 0 2 in
-        Websocket_lwt.Connected_client.send client Websocket_lwt.Frame.(create ~opcode:Websocket_lwt.Frame.Opcode.Close ~content ())
+        Websocket_lwt.Connected_client.send client Websocket.Frame.(create ~opcode:Websocket.Frame.Opcode.Close ~content ())
       else
-        Websocket_lwt.Connected_client.send client @@ Websocket_lwt.Frame.close 1000
-    | Websocket_lwt.Frame.Opcode.Pong ->
+        Websocket_lwt.Connected_client.send client @@ Websocket.Frame.close 1000
+    | Websocket.Frame.Opcode.Pong ->
       inner ()
-    | Websocket_lwt.Frame.Opcode.Text ->
+    | Websocket.Frame.Opcode.Text ->
        Lwt_mvar.put message_box (Message (id, frame.content));
        inner ()
     | _ ->
        Lwt_mvar.put message_box (Quit id);
-       let close_frame = Websocket_lwt.Frame.(close 1002) in
+       let close_frame = Websocket.Frame.(close 1002) in
        Websocket_lwt.Connected_client.send client close_frame
 
   in inner ()
