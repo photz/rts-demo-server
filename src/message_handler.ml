@@ -9,7 +9,7 @@ let new_client gs client_id send =
   let open Gamestate in
   let new_player = Player.create "unknown" 3000. in
   Core.Hashtbl.add_exn gs.players client_id new_player;
-  Entity.create_gold_mine gs ~pos:{x=x+.2.5;y};
+  Entity.create_gold_mine gs ~pos:{x=x+.5.0;y};
   gs
 
 (** Handler that gets called when a player leaves the game *)
