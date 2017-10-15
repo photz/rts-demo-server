@@ -22,7 +22,9 @@ let run entity_templates gs time_passed : Gamestate.t =
          let open Component.Point_mass in
          let unit_pos = {x=pm.position.x -. 3.0; y=pm.position.y-.3.0} in
 
-         let pm = {position=unit_pos; velocity={x=0.0; y=0.0}} in
+         let pm = {position=unit_pos;
+                   velocity={x=0.0; y=0.0};
+                   orientation=Core.Random.float 360.} in
 
          let tpl = Core.Map.find_exn entity_templates template_id in
 

@@ -3,21 +3,24 @@ open Vec
 module Point_mass = struct
   type t = { position: vec2;
              velocity: vec2;
+             orientation: float;
            }
 
   let create pos =
-    { position=pos; velocity={x=0.; y=0.} }
+    { position=pos; velocity={x=0.; y=0.}; orientation=0. }
 
   let update_pos pm time_passed =
     let x = pm.position.x +. pm.velocity.x *. time_passed in
     let y = pm.position.y +. pm.velocity.y *. time_passed in
-    { position={x;y}; velocity=pm.velocity}
+    { position={x;y}; velocity=pm.velocity; orientation=pm.orientation }
 
   let update_velocity pm velocity =
-    { position = pm.position; velocity }
+    { position = pm.position; velocity; orientation=pm.orientation }
 
   let halt pm =
-    { position = pm.position; velocity = {x = 0.; y = 0. } }
+    { position = pm.position;
+      velocity = {x = 0.; y = 0. };
+      orientation = pm.orientation }
 
   let serialize pm =
     let open Yojson.Basic in
@@ -27,9 +30,11 @@ module Point_mass = struct
     let velocity = `Assoc [("x", `Float pm.velocity.x);
                            ("y", `Float pm.velocity.y)]
     in
+    let orientation = `Float pm.orientation in
 
     `Assoc [("position", position);
-            ("velocity", velocity)]
+            ("velocity", velocity);
+            ("orientation", orientation)]
 
   let distance (pm1 : t) (pm2 : t) : float =
     let x_d = pm1.position.x -. pm2.position.x in
