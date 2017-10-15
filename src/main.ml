@@ -1,4 +1,4 @@
-let port = 9004
+let port = 9003
 let host = "127.0.0.1"
 let tick_ns = 200_000_000
 let db_path = "entity_templates.sqlite3"
